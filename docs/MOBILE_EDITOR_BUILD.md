@@ -18,7 +18,7 @@ hosted database.**
 
 | Thing | Value |
 |---|---|
-| Worktree | `/home/mikhaily/.bb/plugins/environment-git-worktree/host-data/worktrees/thr_e7recfsvyg-1/kamy-jemput` |
+| Worktree | `/home/user/.bb/plugins/environment-git-worktree/host-data/worktrees/thr_e7recfsvyg-1/kamy-jemput` |
 | Branch | `bb/kj-1-make-editing-customer-card-mobile-friendly-thr_e7recfsvyg` |
 | Supabase project | `kamy-wt-4e3fd182c5b22a67` |
 | Supabase API | `http://127.0.0.1:48550` |

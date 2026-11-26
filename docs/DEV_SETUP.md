@@ -41,7 +41,7 @@ FROM_EMAIL=onboarding@resend.dev
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-> **Ask Mikhail for the Supabase and Stripe keys** — you share the same project and test account. Only the `STRIPE_WEBHOOK_SECRET` will be different for each of you.
+> **Ask the project owner for the Supabase and Stripe keys** — you share the same project and test account. Only the `STRIPE_WEBHOOK_SECRET` will be different for each of you.
 
 ### 4. Run the DB migrations (on every new target project)
 
@@ -341,8 +341,8 @@ a worktree, project or port. It requires explicit expectations from the caller:
 `SUPABASE_EXPECTED_DB_PORT`, and `SUPABASE_EXPECTED_CONTAINER`; it then derives
 the current worktree/config/container and fails closed on any mismatch. For the
 approved issue #74 run, the asserted target is worktree
-`/home/mikhaily/.bb/worktrees/env_tft5whtu4j/kamy-jemput`, config
-`/home/mikhaily/.bb/worktrees/env_tft5whtu4j/kamy-jemput/.supabase-worktree/supabase/config.toml`,
+`/home/user/.bb/worktrees/env_tft5whtu4j/kamy-jemput`, config
+`/home/user/.bb/worktrees/env_tft5whtu4j/kamy-jemput/.supabase-worktree/supabase/config.toml`,
 project `kamy-wt-ac00fdae07b3bad0`, API `48240`, DB `48241`, container
 `supabase_db_kamy-wt-ac00fdae07b3bad0`. These values describe that run; they are
 not executable defaults. The repository default stack (`54321`/`54322`) and
@@ -360,8 +360,8 @@ For this checkout only (non-executable example; derive and verify each value
 again before use):
 
 ```text
-SUPABASE_EXPECTED_WORKDIR=/home/mikhaily/.bb/worktrees/env_tft5whtu4j/kamy-jemput
-SUPABASE_EXPECTED_CONFIG_PATH=/home/mikhaily/.bb/worktrees/env_tft5whtu4j/kamy-jemput/.supabase-worktree/supabase/config.toml
+SUPABASE_EXPECTED_WORKDIR=/home/user/.bb/worktrees/env_tft5whtu4j/kamy-jemput
+SUPABASE_EXPECTED_CONFIG_PATH=/home/user/.bb/worktrees/env_tft5whtu4j/kamy-jemput/.supabase-worktree/supabase/config.toml
 SUPABASE_EXPECTED_PROJECT_ID=kamy-wt-ac00fdae07b3bad0
 SUPABASE_EXPECTED_API_PORT=48240
 SUPABASE_EXPECTED_DB_PORT=48241

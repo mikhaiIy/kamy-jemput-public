@@ -1,0 +1,9 @@
+/* Mobile touch targets for the footer. Decorative styles stay inline. */
+
+/* The footer links are 13px text with no vertical padding — about 20px tall.
+   Grow the touch box to 44px at mobile widths; desktop keeps its compact row. */
+@media (max-width: 1023px) {
+  .footerLink {
+    padding-block: 15px;
+  }
+}

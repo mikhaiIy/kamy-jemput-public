@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kamy jemput — UI glossary</title>
+<meta name="description" content="Canonical names for every part of the kamy jemput interface, wired to the wireframe part each one means.">
+<link rel="stylesheet" href="glossary.css">
+<link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+
+<a class="skip" href="#stage">Skip to the plate</a>
+
+<header class="masthead">
+  <div class="masthead-id">
+    <h1>UI glossary</h1>
+    <p class="masthead-sub">One name per interface part, so a prompt says exactly which thing to change.</p>
+  </div>
+  <dl class="prov" id="prov"></dl>
+</header>
+
+<div class="shell">
+
+  <!-- ------------------------------------------------------------ rail -->
+  <aside class="rail" aria-label="Glossary index">
+    <div class="rail-search">
+      <label class="sr-only" for="q">Search terms</label>
+      <input id="q" type="search" placeholder="Search names, aliases, files…" autocomplete="off" spellcheck="false">
+      <button type="button" id="q-clear" class="q-clear" aria-label="Clear search" hidden>×</button>
+    </div>
+
+    <div class="rail-filters">
+      <div class="filter-group" role="group" aria-label="Filter by plate">
+        <p class="filter-head">Interface</p>
+        <div id="plate-filters" class="chips"></div>
+      </div>
+      <div class="filter-group" role="group" aria-label="Filter by kind">
+        <p class="filter-head">Kind</p>
+        <div id="cat-filters" class="chips"></div>
+      </div>
+    </div>
+
+    <p class="rail-count" id="rail-count" aria-live="polite"></p>
+    <nav class="rail-list" id="rail-list" aria-label="Terms"></nav>
+  </aside>
+
+  <!-- ----------------------------------------------------------- stage -->
+  <main class="stage" id="stage" tabindex="-1">
+
+    <section class="plate" aria-labelledby="plate-name">
+      <header class="plate-head">
+        <div class="plate-head-id">
+          <p class="plate-group" id="plate-group"></p>
+          <h2 id="plate-name"></h2>
+          <p class="plate-route" id="plate-route"></p>
+        </div>
+        <div class="plate-views" role="group" aria-label="Visual">
+          <button type="button" class="view-btn is-on" data-view="wireframe" aria-pressed="true">Wireframe</button>
+          <button type="button" class="view-btn" data-view="screenshot" aria-pressed="false">Screenshot</button>
+        </div>
+      </header>
+
+      <p class="plate-summary" id="plate-summary"></p>
+      <p class="plate-warning" id="plate-warning" hidden></p>
+
+      <!-- the connector surface: wireframe + labels + svg leader lines -->
+      <div class="connector" id="connector">
+        <svg class="leaders" id="leaders" aria-hidden="true" focusable="false"></svg>
+        <div class="figure">
+          <div class="figure-bar">
+            <p class="figure-tag"><span class="dot-recon"></span> Wireframe — a reconstruction, not a screenshot</p>
+            <div class="width-toggle" role="group" aria-label="Simulated viewport width">
+              <button type="button" class="w-btn is-on" data-w="desktop" aria-pressed="true">Desktop 1280</button>
+              <button type="button" class="w-btn" data-w="mobile" aria-pressed="false">Mobile 390</button>
+            </div>
+          </div>
+          <div class="figure-scroll" id="figure-scroll">
+            <div class="figure-body" id="figure-body" data-w="desktop"></div>
+          </div>
+          <p class="figure-note" id="figure-note"></p>
+        </div>
+        <div class="labels">
+          <p class="labels-head">Terms on this plate</p>
+          <ul class="labels-list" id="labels-list"></ul>
+        </div>
+      </div>
+
+      <!-- screenshot view -->
+      <div class="shotview" id="shotview" hidden>
+        <div class="shot-tabs" role="group" aria-label="Screenshot width" id="shot-tabs"></div>
+        <figure class="shot-figure">
+          <img id="shot-img" alt="">
+          <figcaption id="shot-cap"></figcaption>
+        </figure>
+      </div>
+
+      <footer class="plate-sources">
+        <p class="filter-head">Source</p>
+        <ul id="plate-sources"></ul>
+      </footer>
+    </section>
+
+    <!-- ---------------------------------------------------------- detail -->
+    <section class="detail" id="detail" aria-live="polite" aria-labelledby="detail-name">
+      <div class="detail-empty" id="detail-empty">
+        <p>Pick a term to see its definition, where it lives, and a prompt that uses it correctly.</p>
+      </div>
+      <article class="detail-body" id="detail-body" hidden></article>
+    </section>
+
+    <!-- -------------------------------------------------------- guidance -->
+    <section class="guidance">
+      <div class="guide-col">
+        <h2>Words that misfire</h2>
+        <p class="guide-lede">Two problems, two fixes. <b>Qualify</b> means the word names something real, but more than one thing. <b>Avoid</b> means nothing in this codebase answers to it.</p>
+        <ul class="avoid-list" id="avoid-list"></ul>
+      </div>
+      <div class="guide-col">
+        <h2>Not yet covered</h2>
+        <p class="guide-lede">Recorded rather than guessed. If a prompt needs one of these, name the file directly.</p>
+        <ul class="gap-list" id="gap-list"></ul>
+      </div>
+    </section>
+
+    <footer class="colophon">
+      <p><strong>Keeping this true.</strong> Terms live in <code>data/</code>; the wireframes are declarative node trees in <code>data/plates.js</code>, so a maintainer edits data, never coordinates. Change the UI &rarr; update the term and its target &rarr; run <code>node validate.mjs</code>, which fails on any term without a target or any target without a term. Re-shoot references with <code>node capture.mjs</code> against a local dev server. Full instructions in <code>README.md</code>.</p>
+    </footer>
+  </main>
+</div>
+
+<script src="data/terms.js"></script>
+<script src="data/plates.js"></script>
+<script src="data/terms-shell.js"></script>
+<script src="data/terms-app.js"></script>
+<script src="data/guidance.js"></script>
+<script src="screenshots/manifest.js"></script>
+<script src="glossary.js"></script>
+</body>
+</html>

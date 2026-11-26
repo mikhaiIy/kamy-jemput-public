@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kamy jemput — Mobile Section editor lab (KJ-1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#faf8f4; --foreground:#1a1208; --card:#fff;
+  --primary:#2c1a4a; --primary-hover:#45305f; --secondary:#f3ede3;
+  --muted-foreground:#5a4838; --accent:#c9984a; --border:#e2d8cc;
+  --destructive:#c0392b; --ok:#27ae60;
+  --sidebar:#fbf7ef;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:
+    radial-gradient(1100px 600px at 12% -8%, #fff 0%, transparent 60%),
+    var(--background);
+  color:var(--foreground);
+  font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--primary)}
+
+/* ---------- page chrome ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 72px}
+.kicker{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-family:"Cormorant Garamond",serif;font-size:44px;line-height:1.05;margin:0 0 12px;color:var(--primary);font-weight:600}
+.lede{margin:0;max-width:62ch;font-size:15px;line-height:1.65;color:var(--muted-foreground)}
+.lede code{background:var(--secondary);padding:1px 5px;border-radius:5px;font-size:13px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:40px;margin-top:38px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+
+/* ---------- option chooser ---------- */
+.options{display:grid;gap:10px}
+.opt{
+  display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;align-items:start;
+  width:100%;text-align:left;padding:14px 16px;border-radius:14px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);
+  transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.opt:hover{border-color:#cdbfae}
+.opt[aria-pressed="true"]{border-color:var(--primary);box-shadow:0 10px 26px -18px rgba(44,26,74,.6)}
+.opt-letter{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:10px;
+  background:var(--secondary);color:var(--primary);font-weight:800;font-size:14px;
+  letter-spacing:-.02em;
+}
+.opt[data-id="CD"] .opt-letter{font-size:11.5px}
+.opt[aria-pressed="true"] .opt-letter{background:var(--primary);color:#fff}
+.opt h3{margin:0 0 3px;font-size:14.5px;color:var(--primary);font-weight:700}
+.opt p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted-foreground)}
+.verdict{display:inline-block;margin-top:8px;font-size:10px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.v-ship{background:#e8f3ee;color:#1f6b4f;border:1px solid #bfe0d1}
+.v-goal{background:#f4ecdb;color:#7a5a18;border:1px solid #e6d3ac}
+.v-partial{background:#f0ecf5;color:#4a3168;border:1px solid #d9cfe6}
+
+/* ---------- scorecard ---------- */
+.score{margin-top:26px;border:1.5px solid var(--border);border-radius:14px;background:var(--card);overflow:hidden}
+.score h4{margin:0;padding:12px 16px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted-foreground);border-bottom:1px solid var(--border);font-weight:800}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid #f0e9df}
+th{font-weight:700;color:var(--muted-foreground);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+tbody tr:last-child td{border-bottom:0}
+td.k{color:var(--muted-foreground)}
+tr.on{background:#fbf7ef}
+tr.on td:first-child{font-weight:800;color:var(--primary)}
+.good{color:#1f6b4f;font-weight:700}
+.mid{color:#7a5a18;font-weight:700}
+.bad{color:var(--destructive);font-weight:700}
+
+/* ---------- device ---------- */
+.stage{position:sticky;top:28px;display:grid;justify-items:center;gap:16px}
+.device{
+  position:relative;width:390px;height:844px;border-radius:52px;padding:12px;
+  background:linear-gradient(160deg,#26262e 0%,#101015 60%,#050507 100%);
+  box-shadow:0 40px 70px -26px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.05) inset;
+  flex:none;
+}
+.device::after{content:"";position:absolute;top:22px;left:50%;transform:translateX(-50%);
+  width:104px;height:26px;border-radius:999px;background:#08080b;z-index:40}
+.screen{position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--background);
+  display:flex;flex-direction:column;isolation:isolate}
+.caption{max-width:390px;font-size:12.5px;line-height:1.6;color:var(--muted-foreground);text-align:center}
+.caption strong{color:var(--primary)}
+
+/* ---------- shared mock editor bits ---------- */
+.screen *{font-family:inherit}
+.statusbar{flex:none;height:52px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 6px;font-size:12px;font-weight:700;color:var(--primary);background:#fff}
+.topbar{flex:none;display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;
+  border-bottom:1px solid var(--border);z-index:20}
+.back{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:#fff;
+  display:grid;place-items:center;color:var(--muted-foreground);font-size:15px;cursor:pointer}
+.title{min-width:0;flex:1}
+.title b{display:block;font-size:13px;color:var(--primary);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title span{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted-foreground)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.cta{flex:none;min-height:38px;padding:0 14px;border-radius:10px;border:0;background:var(--primary);
+  color:#fff;font-size:12.5px;font-weight:800;cursor:pointer}
+
+.body{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+
+/* segmented control */
+.seg{flex:none;display:flex;gap:3px;padding:6px;margin:8px 12px 0;background:#f1ece2;
+  border:1px solid #e7e0d2;border-radius:12px}
+.seg button{flex:1;min-height:38px;border:0;border-radius:9px;background:transparent;cursor:pointer;
+  font-size:12px;font-weight:700;color:var(--muted-foreground)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* section stack */
+.stack{list-style:none;margin:0;padding:0}
+.row{display:flex;align-items:center;gap:8px;padding:0 10px;min-height:56px;background:#fff;
+  border-bottom:1px solid #f1eade;border-left:3px solid transparent;cursor:pointer}
+.row.active{border-left-color:var(--accent);background:#fffdf8}
+.row.off{opacity:.45}
+.handle{flex:none;width:44px;height:44px;display:grid;place-items:center;color:#b9ad9d;font-size:17px;
+  cursor:grab;touch-action:none;border-radius:10px}
+.row .name{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--foreground);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.active .name{font-weight:800;color:var(--primary)}
+.iconbtn{flex:none;width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;
+  color:var(--muted-foreground);font-size:15px;border-radius:10px;cursor:pointer}
+.iconbtn:active{background:var(--secondary)}
+.sdot{flex:none;width:8px;height:8px;border-radius:50%}
+.s-complete{background:var(--ok)} .s-draft{background:var(--accent)} .s-error{background:var(--destructive)}
+
+.gaya{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;
+  border-bottom:1px solid var(--border);cursor:pointer}
+.swatch{width:30px;height:30px;border-radius:9px;flex:none;
+  background:linear-gradient(135deg,#c9984a,#2c1a4a);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.gaya .k{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)}
+.gaya .v{font-size:13px;font-weight:800;color:var(--primary)}
+.addbtn{display:block;width:calc(100% - 24px);margin:12px;min-height:46px;background:transparent;
+  border:1.5px dashed var(--accent);border-radius:11px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer}
+
+/* form */
+.form{padding:16px 14px 28px;display:grid;gap:16px}
+.form h2{margin:0;font-size:17px;color:var(--primary)}
+.form .sub{margin:2px 0 0;font-size:11.5px;color:var(--muted-foreground)}
+.fg{display:grid;gap:6px}
+label{font-size:11.5px;font-weight:700;color:var(--muted-foreground)}
+input,textarea{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:16px;background:#fff;outline:none;min-height:48px;font-family:inherit;color:var(--foreground)}
+input:focus,textarea:focus{border-color:var(--primary)}
+.hint{font-size:11px;color:var(--muted-foreground)}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;
+  color:var(--muted-foreground);font-size:12.5px;font-weight:700;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* card preview */
+.preview{flex:1;min-height:0;overflow:auto;background:#f6efe4}
+.preview.inset{padding-bottom:76px}
+.cardface{min-height:100%;background:linear-gradient(180deg,#f7f1e6 0%,#efe3d2 100%);padding:0 0 40px}
+.hero{position:relative;padding:58px 26px 46px;text-align:center;
+  background:radial-gradient(120% 80% at 50% 0%, #fff8ec 0%, #efe0c9 70%, #e6d5ba 100%)}
+.hero .pre{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:#8a734c}
+.hero .names{font-family:"Great Vibes",cursive;font-size:47px;line-height:1.12;color:#2c1a4a;margin:14px 0 10px}
+.hero .date{font-family:"Cormorant Garamond",serif;font-size:16px;letter-spacing:.22em;color:#6b5637}
+.rule{width:52px;height:1px;background:#c9984a;margin:18px auto}
+.sec{padding:30px 26px;text-align:center;border-top:1px solid #e5d7c0}
+.sec h4{margin:0 0 4px;font-family:"Cormorant Garamond",serif;font-size:19px;color:#2c1a4a;letter-spacing:.04em}
+.sec p{margin:4px 0;font-size:12.5px;line-height:1.7;color:#6b5637}
+.agenda{display:grid;gap:9px;margin-top:14px;font-size:12.5px;color:#6b5637}
+.agenda div{display:flex;justify-content:space-between;border-bottom:1px dotted #d9c8ab;padding-bottom:7px}
+.editpin{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:5px;
+  padding:7px 11px;border-radius:999px;background:rgba(44,26,74,.92);color:#fff;font-size:11px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.taggable{position:relative}
+
+/* Option A — stacked */
+.stacked{flex:1;min-height:0;overflow:auto;padding:12px;display:grid;gap:12px;grid-auto-rows:max-content;align-content:start}
+.panel{border:1px solid var(--border);border-radius:13px;background:#fff;overflow:hidden}
+.panel>header{padding:11px 14px;font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted-foreground);border-bottom:1px solid var(--border);background:#fbf7ef}
+.bezelmini{margin:14px auto;width:300px;max-width:100%;aspect-ratio:340/712;border-radius:40px;
+  padding:14px 9px 10px;background:linear-gradient(160deg,#26262e,#050507)}
+.bezelmini>div{width:100%;height:100%;border-radius:30px;overflow:auto;background:#fff}
+.scrollnote{display:flex;align-items:center;gap:8px;padding:10px 13px;margin:0 12px 12px;border-radius:11px;
+  background:#fff4f1;border:1px solid #f3cdc4;color:#9b2c22;font-size:11.5px;line-height:1.45}
+
+/* Option C — bottom sheet */
+.sheet{position:absolute;left:0;right:0;bottom:76px;z-index:30;background:#fff;
+  border-radius:22px 22px 0 0;box-shadow:0 -14px 40px -12px rgba(26,18,8,.34);
+  display:flex;flex-direction:column;transition:height .28s cubic-bezier(.22,.9,.3,1)}
+.grabber{flex:none;padding:9px 0 3px;display:grid;place-items:center;cursor:grab;touch-action:none}
+.grabber i{width:42px;height:5px;border-radius:999px;background:#dfd5c7;display:block}
+.sheethead{flex:none;display:flex;align-items:center;gap:9px;padding:2px 14px 10px;border-bottom:1px solid var(--border)}
+.sheethead b{flex:1;font-size:14px;color:var(--primary)}
+.sheetbody{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.detents{display:flex;gap:4px;padding:3px;background:#f1ece2;border:1px solid #e7e0d2;border-radius:9px}
+.detents button{min-width:30px;min-height:28px;border:0;border-radius:7px;background:transparent;
+  font-size:10.5px;font-weight:800;color:var(--muted-foreground);cursor:pointer}
+.detents button[aria-pressed="true"]{background:#fff;color:var(--primary)}
+.navrail{position:absolute;left:0;right:0;bottom:0;z-index:35;display:flex;gap:6px;padding:9px 12px 14px;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-top:1px solid var(--border)}
+.navrail button{flex:1;min-height:46px;border-radius:11px;border:1px solid var(--border);background:#fff;
+  font-size:11.5px;font-weight:700;color:var(--muted-foreground);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.navrail button[aria-pressed="true"]{border-color:var(--primary);color:var(--primary);background:#f7f3fb}
+.navrail em{font-style:normal;font-size:15px;line-height:1}
+
+/* C + D — stepper rail inside the canvas-first shell */
+.navrail button:disabled{opacity:.38;cursor:not-allowed}
+.navrail .listbtn{flex:0 0 56px}
+.navrail button.wide{flex-direction:row;gap:6px;font-size:12.5px}
+.navrail .go{background:var(--primary);border-color:var(--primary);color:#fff}
+.navrail .go.final{background:var(--accent);border-color:var(--accent)}
+.sheetrail{flex:none;display:flex;gap:3px;padding:7px 14px 9px}
+.sheetrail i{flex:1;height:3px;border-radius:999px;background:#eadfcd}
+.sheetrail i.done{background:var(--ok)} .sheetrail i.now{background:var(--accent)}
+.count{flex:none;font-size:11px;font-weight:700;color:var(--muted-foreground);white-space:nowrap}
+
+/* Option D — wizard */
+.rail{flex:none;display:flex;gap:4px;padding:12px 14px 8px;background:#fff}
+.rail i{flex:1;height:4px;border-radius:999px;background:#eadfcd}
+.rail i.done{background:var(--ok)} .rail i.now{background:var(--accent)}
+.stepmeta{flex:none;padding:0 14px 10px;background:#fff;font-size:11px;color:var(--muted-foreground);
+  display:flex;justify-content:space-between}
+.stepmeta b{color:var(--primary);font-size:12px}
+.peek{flex:none;height:190px;overflow:hidden;border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);background:#f6efe4;position:relative}
+.peek .cardface{transform:scale(.62);transform-origin:top center;width:161%;margin-left:-30.5%}
+.peeklabel{position:absolute;z-index:2;left:10px;top:9px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.9);
+  font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-foreground)}
+.wizfoot{flex:none;display:flex;gap:8px;padding:10px 12px 16px;border-top:1px solid var(--border);background:#fff}
+.wizfoot button{flex:1;min-height:48px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer}
+.wizfoot .prev{border:1.5px solid var(--border);background:#fff;color:var(--primary);flex:0 0 34%}
+.wizfoot .next{border:0;background:var(--primary);color:#fff}
+
+/* keyboard sim */
+.kb{position:absolute;left:0;right:0;bottom:0;height:290px;z-index:60;
+  background:linear-gradient(180deg,#d6d1c9,#c9c4bb);border-top:1px solid #b5afa5;
+  display:grid;grid-template-rows:repeat(4,1fr);gap:7px;padding:9px 5px 22px;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.9,.3,1)}
+.kb.on{transform:translateY(0)}
+.kb div{display:flex;gap:5px;justify-content:center}
+.kb span{flex:1;max-width:34px;border-radius:6px;background:#fff;box-shadow:0 1px 0 #9c968c}
+.kbtoggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted-foreground);cursor:pointer}
+.kbtoggle input{width:auto;min-height:0}
+.controls{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center}
+.badge{font-size:11px;font-weight:700;color:var(--muted-foreground);background:var(--secondary);
+  padding:5px 11px;border-radius:999px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">KJ-1 · Section editor</p>
+  <h1>Mobile editor lab</h1>
+  <p class="lede">
+    Four candidate shells for editing a customer card on a phone, rendered at
+    390 × 844. Each is interactive — tap the Section rows, drag the sheet,
+    step through the wizard. Nothing here is wired to the app; it exists to
+    settle the shell decision before <code>components/SectionEditor.tsx</code> is
+    touched. Full analysis in <a href="../MOBILE_EDITOR.md">docs/MOBILE_EDITOR.md</a>.
+  </p>
+
+  <div class="layout">
+    <div>
+      <div class="options" id="options"></div>
+
+      <div class="score">
+        <h4>Trade-offs</h4>
+        <table>
+          <thead><tr><th>Option</th><th>Card visible</th><th>Form</th><th>Reorder</th><th>Cost</th></tr></thead>
+          <tbody id="scorebody"></tbody>
+        </table>
+      </div>
+
+      <div class="score" style="margin-top:18px">
+        <h4>Recommended hybrid</h4>
+        <div style="padding:14px 16px;font-size:13px;line-height:1.65;color:var(--muted-foreground)">
+          <b style="color:var(--primary)">Phase 0</b> — foundations that are needed whichever shell wins:
+          16&nbsp;px inputs, 44&nbsp;px targets, a <code>TouchSensor</code> for drag,
+          <code>dvh</code> + visual-viewport handling, and moving the shell styles out of
+          inline <code>CSSProperties</code> so a media query is even possible.<br><br>
+          <b style="color:var(--primary)">Phase 1</b> — ship <b>B</b>. Cheapest shell that makes phone editing possible, and a safety net.<br><br>
+          <b style="color:var(--primary)">Phase 2</b> — upgrade B's <i>Sunting</i> segment to <b>C + D</b>: the card stays behind
+          the sheet at every detent, and the rail carries <i>Kembali</i> / <i>Seterusnya</i> so the
+          customer walks the Sections without leaving the card. <i>Bahagian</i> shrinks to one
+          ☰ icon — still there for jumping and drag-to-reorder, no longer the only way to
+          change Section. <b>This is the recommendation.</b><br><br>
+          <b style="color:var(--primary)">Phase 3</b> — the last step's <i>Seterusnya</i> becomes <i>Terbitkan</i> / payment, turning
+          the stepper into the funnel; and tap-to-edit on the live card as a per-Section
+          enhancement.
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="device"><div class="screen" id="screen"></div></div>
+      <div class="controls">
+        <label class="kbtoggle"><input type="checkbox" id="kb"> Simulate keyboard</label>
+        <span class="badge">390 × 844</span>
+      </div>
+      <p class="caption" id="caption"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  {name:"Pembukaan",       status:"complete", on:true},
+  {name:"Maklumat Majlis", status:"draft",    on:true},
+  {name:"Atur Cara",       status:"complete", on:true},
+  {name:"Peta",            status:"complete", on:true},
+  {name:"Galeri Foto",     status:"draft",    on:true},
+  {name:"Maklumbalas",     status:"error",    on:true},
+  {name:"Ucapan Tetamu",   status:"complete", on:false},
+  {name:"Hadiah / DuitRaya",status:"draft",   on:true},
+  {name:"Terima Kasih",    status:"complete", on:true},
+];
+
+const OPTIONS = [
+  {id:"A", title:"Responsive reflow — stack the panes",
+   desc:"Same three panes, one column. One line of layout work; the preview ends up below a 900 px form, so the customer never sees the card while typing.",
+   verdict:["First commit, not the answer","v-partial"],
+   score:["✗ poor","○ ok","○ ok","very low"], scoreClass:["bad","mid","mid","good"],
+   caption:"<strong>Option A.</strong> Scroll down — the live card is roughly a screen and a half below the fields you are editing. The live-update promise quietly dies."},
+  {id:"B", title:"Segmented panes — Bahagian · Sunting · Pratonton",
+   desc:"One pane at a time behind the segmented control the editor already uses. Each gets the whole screen; seeing an edit costs a deliberate tap.",
+   verdict:["Ship first","v-ship"],
+   score:["○ on demand","✓ good","✓ good","low"], scoreClass:["mid","good","good","good"],
+   caption:"<strong>Option B.</strong> Tap a Section row and the shell switches to <i>Sunting</i>. Comfortable, safe, modal — the feedback loop is two taps wide."},
+  {id:"C", title:"Canvas-first — card behind a bottom sheet",
+   desc:"The card owns the screen at native width, no bezel. The form lives in a sheet with peek / half / full detents. How Canva, Figma and Wix solved this.",
+   verdict:["The destination","v-goal"],
+   score:["✓✓ always","✓ good","○ separate screen","high"], scoreClass:["good","good","mid","bad"],
+   caption:"<strong>Option C.</strong> Drag the grabber (or use the detent chips) — the card stays visible at every height. Switch to <i>Bahagian</i> in the rail for reordering."},
+  {id:"D", title:"Guided wizard — one Section per step",
+   desc:"Walks the customer through their Sections in order with a progress rail. Excellent for a first card, painful for fixing one typo in a revision window.",
+   verdict:["A mode, not a shell","v-partial"],
+   score:["○ per-step","✓✓ excellent","✗ separate screen","medium"], scoreClass:["mid","good","bad","mid"],
+   caption:"<strong>Option D.</strong> Step through with Seterusnya. Focused and calm — until you are a returning customer who wants to change one line."},
+  {id:"CD", label:"C+D", title:"C + D — canvas-first with a stepper rail",
+   desc:"Option C's always-visible card and sheet, but the rail carries D's Kembali / Seterusnya. Bahagian shrinks to one icon in the middle — a jump-and-reorder screen, no longer the only way to change Section.",
+   verdict:["Recommended","v-ship"],
+   score:["✓✓ always","✓ good","✓ on demand","high"], scoreClass:["good","good","good","bad"],
+   caption:"<strong>C + D.</strong> Step through the Sections without ever leaving the card. ☰ jumps or reorders; the last step turns into the paywall."},
+];
+
+let current = "CD";
+let activeSection = 1;
+let pane = "edit";       // B / C rail
+let detent = "half";     // C
+let step = 1;            // D
+
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* ---------- shared fragments ---------- */
+function statusbar(){
+  return `<div class="statusbar"><span>9:41</span><span>●●● ⌁ ▮</span></div>`;
+}
+function topbar(){
+  return `<div class="topbar">
+    <button class="back" aria-label="Kembali">←</button>
+    <div class="title">
+      <b>Perkahwinan Klasik</b>
+      <span><i class="dot"></i> Tersimpan · baru sahaja</span>
+    </div>
+    <button class="cta">RM 79</button>
+  </div>`;
+}
+function stackList(){
+  return `<ul class="stack">${SECTIONS.map((s,i)=>`
+    <li class="row ${i===activeSection?"active":""} ${s.on?"":"off"}" data-i="${i}">
+      <span class="handle" aria-label="Susun semula">⋮⋮</span>
+      <span class="sdot s-${s.status}"></span>
+      <span class="name">${esc(s.name)}</span>
+      <button class="iconbtn" aria-label="Lumpuhkan">${s.on?"👁":"⊘"}</button>
+      <button class="iconbtn" aria-label="Buang">×</button>
+    </li>`).join("")}</ul>`;
+}
+function stackPane(){
+  return `<div style="flex:1;min-height:0;overflow:auto;background:var(--sidebar)">
+    <div class="gaya">
+      <span class="swatch"></span>
+      <span><span class="k">Gaya / Tema</span><br><span class="v">Klasik Emas</span></span>
+      <span style="margin-left:auto;color:var(--muted-foreground)">▾</span>
+    </div>
+    ${stackList()}
+    <button class="addbtn">+ Tambah Bahagian</button>
+  </div>`;
+}
+function form(compact){
+  const s = SECTIONS[activeSection];
+  return `<div class="form">
+    <div>
+      <h2>${esc(s.name)}</h2>
+      <p class="sub">Event Info · #${activeSection+1}</p>
+    </div>
+    ${compact?"":`<div class="fg"><label>Gaya</label>
+      <div class="chips">
+        <button class="chip" aria-pressed="true">Klasik</button>
+        <button class="chip">Moden</button>
+        <button class="chip">Minimalis</button>
+        <button class="chip">Bunga</button>
+      </div></div>`}
+    <div class="fg"><label>Nama majlis</label><input value="Walimatul Urus"></div>
+    <div class="fg"><label>Tarikh</label><input type="date" value="2026-11-14"></div>
+    <div class="fg"><label>Masa</label><input value="11:00 pagi – 4:00 petang"></div>
+    <div class="fg"><label>Tempat</label><input value="Dewan Seri Melati, Shah Alam"></div>
+    <div class="fg"><label>Alamat penuh</label>
+      <textarea rows="3">Jalan Bunga Raya 12, Seksyen 7, 40000 Shah Alam, Selangor</textarea>
+      <span class="hint">Alamat ini digunakan untuk butang Waze dan Google Maps.</span></div>
+    <div class="fg"><label>Nota untuk tetamu</label><textarea rows="3">Kehadiran anda amat kami hargai.</textarea></div>
+  </div>`;
+}
+function cardface(taggable){
+  const pin = taggable ? `<span class="editpin">✎ Sunting</span>` : "";
+  return `<div class="cardface">
+    <div class="hero ${taggable?"taggable":""}">${pin}
+      <div class="pre">Walimatul Urus</div>
+      <div class="names">Nurul &amp; Amir</div>
+      <div class="date">14 · 11 · 2026</div>
+      <div class="rule"></div>
+      <div class="pre">Sabtu · 11:00 pagi</div>
+    </div>
+    <div class="sec ${taggable?"taggable":""}">${pin}
+      <h4>Maklumat Majlis</h4>
+      <p>Dewan Seri Melati<br>Jalan Bunga Raya 12, Seksyen 7<br>40000 Shah Alam, Selangor</p>
+    </div>
+    <div class="sec ${taggable?"taggable":""}">${pin}
+      <h4>Atur Cara</h4>
+      <div class="agenda">
+        <div><span>Ketibaan tetamu</span><span>11:00 pagi</span></div>
+        <div><span>Ketibaan pengantin</span><span>12:30 tgh</span></div>
+        <div><span>Jamuan makan</span><span>1:00 ptg</span></div>
+        <div><span>Majlis bersurai</span><span>4:00 ptg</span></div>
+      </div>
+    </div>
+    <div class="sec"><h4>Terima Kasih</h4>
+      <p>Semoga majlis ini dilimpahi keberkatan.</p></div>
+  </div>`;
+}
+function keyboard(){
+  return `<div class="kb" id="kbsim">
+    ${[10,9,7,3].map(n=>`<div>${"<span></span>".repeat(n)}</div>`).join("")}
+  </div>`;
+}
+
+/* ---------- shells ---------- */
+function renderA(){
+  return `${statusbar()}${topbar()}
+  <div class="body"><div class="stacked">
+    <div class="panel"><header>Bahagian</header>${stackList()}
+      <button class="addbtn">+ Tambah Bahagian</button></div>
+    <div class="panel"><header>Sunting — ${esc(SECTIONS[activeSection].name)}</header>${form(false)}</div>
+    <div class="scrollnote">⚠ The live card starts here — about 900 px below the fields above. Scroll to see it.</div>
+    <div class="panel"><header>Pratonton</header>
+      <div class="bezelmini"><div>${cardface(false)}</div></div></div>
+  </div></div>${keyboard()}`;
+}
+
+function renderB(){
+  const panes = {
+    stack:  stackPane(),
+    edit:   `<div style="flex:1;min-height:0;overflow:auto;background:#fff">${form(false)}</div>`,
+    preview:`<div class="preview">${cardface(false)}</div>`,
+  };
+  return `${statusbar()}${topbar()}
+  <div class="body">
+    <div class="seg" data-seg="B">
+      <button data-p="stack"  aria-pressed="${pane==="stack"}">Bahagian</button>
+      <button data-p="edit"   aria-pressed="${pane==="edit"}">Sunting</button>
+      <button data-p="preview"aria-pressed="${pane==="preview"}">Pratonton</button>
+    </div>
+    ${panes[pane==="stack"||pane==="edit"||pane==="preview"?pane:"edit"]}
+  </div>${keyboard()}`;
+}
+
+/* Sections a stepper walks through: disabled ones render nothing on the card,
+   so Kembali / Seterusnya skip them. They stay reachable from Bahagian. */
+const walk = () => SECTIONS.map((s,i) => s.on ? i : -1).filter(i => i >= 0);
+function stepBy(delta){
+  const list = walk();
+  let pos = list.indexOf(activeSection);
+  if (pos === -1) pos = 0; else pos += delta;
+  activeSection = list[Math.min(list.length-1, Math.max(0, pos))];
+}
+
+function renderC(stepper){
+  const H = {peek:"26%", half:"52%", full:"86%"}[detent];
+  if (pane === "stack"){
+    return `${statusbar()}${topbar()}
+    <div class="body">${stackPane()}
+      <div style="height:78px;flex:none"></div>
+      ${stepper
+        ? `<div class="navrail"><button class="wide go" data-p="edit"><em>✎</em>Kembali ke kad</button></div>`
+        : railC()}
+    </div>${keyboard()}`;
+  }
+  const list = walk(), pos = list.indexOf(activeSection);
+  return `${statusbar()}${topbar()}
+  <div class="body">
+    <div class="preview inset">${cardface(true)}</div>
+    <div class="sheet" id="sheet" style="height:${H}">
+      <div class="grabber" id="grabber"><i></i></div>
+      ${stepper ? `<div class="sheetrail">${list.map((_,i)=>
+        `<i class="${i<pos?"done":i===pos?"now":""}"></i>`).join("")}</div>` : ""}
+      <div class="sheethead">
+        <span class="sdot s-${SECTIONS[activeSection].status}"></span>
+        <b>${esc(SECTIONS[activeSection].name)}</b>
+        ${stepper ? `<span class="count">${pos+1} / ${list.length}</span>` : ""}
+        <div class="detents">
+          <button data-d="peek" aria-pressed="${detent==="peek"}">▁</button>
+          <button data-d="half" aria-pressed="${detent==="half"}">▄</button>
+          <button data-d="full" aria-pressed="${detent==="full"}">█</button>
+        </div>
+      </div>
+      <div class="sheetbody">${form(detent==="peek")}</div>
+    </div>
+    ${stepper ? railCD(pos, list.length) : railC()}
+  </div>${keyboard()}`;
+}
+function renderCD(){ return renderC(true) }
+
+function railC(){
+  return `<div class="navrail">
+    <button data-p="stack" aria-pressed="${pane==="stack"}"><em>☰</em>Bahagian</button>
+    <button data-p="edit"  aria-pressed="${pane!=="stack"}"><em>✎</em>Sunting kad</button>
+  </div>`;
+}
+function railCD(pos, total){
+  const last = pos === total - 1;
+  return `<div class="navrail">
+    <button class="wide" data-cd="-1" ${pos<=0?"disabled":""}><em>←</em>Kembali</button>
+    <button class="listbtn" data-p="stack" aria-label="Semua bahagian" title="Semua bahagian"><em>☰</em></button>
+    <button class="wide go ${last?"final":""}" data-cd="1">${last?"Terbitkan":"Seterusnya"}<em>${last?"✓":"→"}</em></button>
+  </div>`;
+}
+
+function renderD(){
+  const total = SECTIONS.length;
+  return `${statusbar()}${topbar()}
+  <div class="body">
+    <div class="rail">${SECTIONS.map((_,i)=>`<i class="${i<step?"done":i===step?"now":""}"></i>`).join("")}</div>
+    <div class="stepmeta"><b>${esc(SECTIONS[step].name)}</b><span>Langkah ${step+1} / ${total}</span></div>
+    <div class="peek"><span class="peeklabel">Pratonton bahagian ini</span>${cardface(false)}</div>
+    <div style="flex:1;min-height:0;overflow:auto;background:#fff">${form(true)}</div>
+    <div class="wizfoot">
+      <button class="prev" data-step="-1" ${step===0?"disabled":""}>Kembali</button>
+      <button class="next" data-step="1">${step===total-1?"Selesai":"Seterusnya"}</button>
+    </div>
+  </div>${keyboard()}`;
+}
+
+/* ---------- wiring ---------- */
+const screen = document.getElementById("screen");
+const caption = document.getElementById("caption");
+
+function render(){
+  const fn = {A:renderA,B:renderB,C:renderC,D:renderD,CD:renderCD}[current];
+  screen.innerHTML = fn();
+  if (document.getElementById("kb").checked) screen.querySelector(".kb").classList.add("on");
+  caption.innerHTML = OPTIONS.find(o=>o.id===current).caption;
+
+  screen.querySelectorAll(".row").forEach(r => r.addEventListener("click", e => {
+    if (e.target.closest(".iconbtn") || e.target.closest(".handle")) return;
+    activeSection = +r.dataset.i;
+    if (current === "B") pane = "edit";
+    if (current === "C" || current === "CD") { pane = "edit"; detent = "half"; }
+    render();
+  }));
+  screen.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => {
+    pane = b.dataset.p; render();
+  }));
+  screen.querySelectorAll("[data-cd]").forEach(b => b.addEventListener("click", () => {
+    const delta = +b.dataset.cd;
+    const list = walk();
+    if (delta > 0 && list.indexOf(activeSection) === list.length - 1) return; // "Terbitkan"
+    stepBy(delta); pane = "edit"; render();
+  }));
+  screen.querySelectorAll(".detents button").forEach(b => b.addEventListener("click", () => {
+    detent = b.dataset.d; render();
+  }));
+  screen.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => {
+    step = Math.min(SECTIONS.length-1, Math.max(0, step + (+b.dataset.step)));
+    activeSection = step; render();
+  }));
+  screen.querySelectorAll(".editpin").forEach(p => p.addEventListener("click", () => {
+    detent = "half"; pane = "edit"; render();
+  }));
+  screen.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+    screen.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed","false"));
+    c.setAttribute("aria-pressed","true");
+  }));
+  wireSheetDrag();
+
+  // The card follows the step. SectionEditor already has this machinery —
+  // previewScroll / scrollTargetId / scrollToken drive the desktop preview the
+  // same way; the mobile stepper would reuse it rather than invent anything.
+  if (current === "CD" && pane !== "stack") {
+    const view = screen.querySelector(".preview");
+    const list = walk(), pos = list.indexOf(activeSection);
+    if (view && list.length > 1) {
+      view.scrollTo({
+        top: (pos / (list.length - 1)) * (view.scrollHeight - view.clientHeight),
+        behavior: "smooth",
+      });
+    }
+  }
+}
+
+/* Option C: drag the grabber between detents */
+function wireSheetDrag(){
+  const grabber = document.getElementById("grabber");
+  const sheet = document.getElementById("sheet");
+  if (!grabber || !sheet) return;
+  let startY = 0, startH = 0, dragging = false;
+  const bodyH = () => sheet.parentElement.getBoundingClientRect().height;
+  const down = e => {
+    dragging = true; startY = (e.touches?e.touches[0]:e).clientY;
+    startH = sheet.getBoundingClientRect().height;
+    sheet.style.transition = "none";
+    e.preventDefault();
+  };
+  const move = e => {
+    if (!dragging) return;
+    const y = (e.touches?e.touches[0]:e).clientY;
+    const h = Math.min(bodyH()*0.92, Math.max(bodyH()*0.18, startH - (y - startY)));
+    sheet.style.height = h + "px";
+  };
+  const up = () => {
+    if (!dragging) return;
+    dragging = false;
+    const pct = sheet.getBoundingClientRect().height / bodyH();
+    detent = pct < 0.42 ? "peek" : pct < 0.74 ? "half" : "full";
+    sheet.style.transition = "";
+    render();
+  };
+  grabber.addEventListener("mousedown", down);
+  grabber.addEventListener("touchstart", down, {passive:false});
+  window.addEventListener("mousemove", move);
+  window.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("mouseup", up);
+  window.addEventListener("touchend", up);
+}
+
+/* option chooser + scorecard */
+document.getElementById("options").innerHTML = OPTIONS.map(o=>`
+  <button class="opt" data-id="${o.id}" aria-pressed="${o.id===current}">
+    <span class="opt-letter">${o.label ?? o.id}</span>
+    <span>
+      <h3>${o.title}</h3>
+      <p>${o.desc}</p>
+      <span class="verdict ${o.verdict[1]}">${o.verdict[0]}</span>
+    </span>
+  </button>`).join("");
+
+document.getElementById("scorebody").innerHTML = OPTIONS.map(o=>`
+  <tr data-id="${o.id}" class="${o.id===current?"on":""}">
+    <td>${o.label ?? o.id}</td>
+    ${o.score.map((s,i)=>`<td class="${o.scoreClass[i]}">${s}</td>`).join("")}
+  </tr>`).join("");
+
+document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+  current = b.dataset.id;
+  document.querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.id===current)));
+  document.querySelectorAll("#scorebody tr").forEach(r => r.classList.toggle("on", r.dataset.id===current));
+  pane = current === "C" ? "edit" : "edit";
+  detent = "half";
+  render();
+}));
+
+document.getElementById("kb").addEventListener("change", e => {
+  const k = screen.querySelector(".kb");
+  if (k) k.classList.toggle("on", e.target.checked);
+});
+
+render();
+</script>
+</body>
+</html>

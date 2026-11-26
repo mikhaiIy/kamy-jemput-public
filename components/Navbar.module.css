@@ -1,0 +1,11 @@
+/* Mobile touch targets for the Navbar. Decorative styles stay inline. */
+
+/* The logo link wraps a 24px logo. Grow its touch box to 44px at mobile widths
+   without changing the logo; desktop keeps the link as-is. */
+@media (max-width: 1023px) {
+  .logoLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,534 @@
+@import "tailwindcss";
+
+:root {
+  --navbar-height: 58px;
+  --background: #faf8f4;
+  --foreground: #1a1208;
+  --card: #ffffff;
+  --card-foreground: #1a1208;
+  --popover: #ffffff;
+  --popover-foreground: #1a1208;
+  --primary: #2c1a4a;
+  --primary-hover: #45305f;
+  --primary-foreground: #faf8f4;
+  --secondary: #f3ede3;
+  --secondary-foreground: #1a1208;
+  --muted: #f3ede3;
+  --muted-foreground: #5a4838;
+  --accent: #c9984a;
+  --accent-foreground: #ffffff;
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+  --border: #e2d8cc;
+  --input: #e2d8cc;
+  --ring: #2c1a4a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-cormorant);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+/* Shared affordance for native and headless controls; utility cursors such as
+   grab/grabbing can still override this base rule on drag handles. */
+@layer base {
+  :where(button, a[href], [role="button"], summary, select,
+    input[type="button"], input[type="submit"], input[type="reset"],
+    input[type="checkbox"], input[type="radio"], input[type="file"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+    cursor: pointer;
+  }
+
+  :where(button, [role="button"], select, input, textarea):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+  }
+}
+
+/* Phone-frame live preview: transparent track, thumb only. Used by the editor
+   preview pane (components/PhonePreview.tsx) so the device scroll feels native
+   and nothing competes with the card's own background. */
+.phone-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 110, 100, 0.35) transparent;
+}
+.phone-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.phone-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.phone-scroll::-webkit-scrollbar-thumb {
+  background: rgba(120, 110, 100, 0.32);
+  border-radius: 999px;
+}
+.phone-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 110, 100, 0.55);
+}
+
+/* Gallery phone showcase. Most visual styling stays inline with the existing
+   preview components; pseudo-states and motion preferences live here. */
+.template-showcase-card {
+  text-decoration: none;
+}
+
+.template-showcase-card:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 5px;
+  box-shadow: 0 0 0 7px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.template-showcase-affordance {
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.template-showcase-card:hover .template-showcase-affordance,
+.template-showcase-card:focus-visible .template-showcase-affordance {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .template-showcase-affordance,
+  .template-showcase-preview-track {
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Section stack — Gaya background + ambient motion.
+   The Section stack (components/SectionInvitationCard.tsx) paints the active
+   Gaya preset's `theme.background` inline on its root; this block adds the
+   decorative motion layer behind every enabled Section, scoped to the stack so
+   gallery/editor chrome and site shell are untouched.
+--------------------------------------------------------------------------- */
+
+[data-section-stack] {
+  position: relative;
+  /* Clip the decorative backdrop to the invitation surface on both axes so
+     particles/ken-burns layers never bleed outside the card or Live preview. */
+  overflow: clip;
+}
+
+/* Content (Sections + footer) sits above the decorative layer. */
+[data-section-stack] > *:not(.gaya-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
+.gaya-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* particles — drifting motes/petals/stars tinted by the Gaya. */
+[data-gaya-animation="particles"] .gaya-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -20% 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1.6px),
+    radial-gradient(rgba(201, 152, 74, 0.4) 1px, transparent 1.6px);
+  background-size: 90px 90px, 140px 140px;
+  background-position: 0 0, 40px 60px;
+  opacity: 0.5;
+  animation: gaya-drift 26s linear infinite;
+}
+
+@keyframes gaya-drift {
+  from { transform: translateY(6%); }
+  to   { transform: translateY(-6%); }
+}
+
+/* ken_burns — slow atmospheric scale over the preset background. */
+[data-gaya-animation="ken_burns"] .gaya-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(60% 45% at 30% 25%, rgba(255, 255, 255, 0.14), transparent 70%),
+    radial-gradient(55% 40% at 75% 75%, rgba(201, 152, 74, 0.10), transparent 70%);
+  animation: gaya-ken-burns 36s ease-in-out infinite alternate;
+}
+
+@keyframes gaya-ken-burns {
+  from { transform: scale(1) translate(0, 0); }
+  to   { transform: scale(1.08) translate(2%, -2%); }
+}
+
+/* fade — a gentle breathing glow; `none` stays fully static. */
+[data-gaya-animation="fade"] .gaya-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    70% 50% at 50% 0%,
+    rgba(255, 255, 255, 0.18),
+    transparent 70%
+  );
+  animation: gaya-breathe 9s ease-in-out infinite alternate;
+}
+
+@keyframes gaya-breathe {
+  from { opacity: 0.35; }
+  to   { opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-section-stack][data-gaya-animation] .gaya-backdrop {
+    display: none;
+  }
+}
+
+/* Dashboard invitation shelf: real mobile renders with quiet, usable controls. */
+@layer components {
+  .invitation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 20px; align-items: stretch; container-type: inline-size; }
+  .invitation-tile { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--border); border-radius: 16px; background: var(--card); overflow: hidden; }
+  .invitation-tile-render { display: flex; justify-content: center; padding: 18px 14px 14px; background: var(--secondary); border-bottom: 1px solid var(--border); }
+  .invitation-tile-body { display: flex; flex: 1; flex-direction: column; align-items: stretch; padding: 18px; }
+  .invitation-secondary-actions { min-height: 40px; }
+  .invitation-secondary-track { min-height: 0; }
+  .invitation-status { align-self: flex-start; padding: 5px 8px; border-radius: 5px; background: var(--secondary); color: var(--primary); font-size: 10px; font-weight: 600; }
+  .invitation-status[data-tone="success"] { background: #e6f2e9; color: #286243; }
+  .invitation-status[data-tone="danger"] { background: #fbece8; color: #a34336; }
+  .invitation-thumbnail { display: block; position: relative; width: var(--thumbnail-width, 148px); padding: 9px 6px 6px; border-radius: 21px; background: #1c1922; box-shadow: 0 12px 20px -12px color-mix(in srgb, var(--primary) 40%, transparent); }
+  .invitation-thumbnail:focus-visible { outline: 3px solid var(--ring); outline-offset: 5px; }
+  .invitation-thumbnail-speaker { position: absolute; top: 4px; left: calc(50% - 12px); width: 24px; height: 3px; border-radius: 3px; background: #ffffff55; }
+  .invitation-thumbnail-screen { display: block; position: relative; height: var(--thumbnail-height, 279px); overflow: hidden; border-radius: 15px; background: var(--muted); pointer-events: none; }
+  .invitation-thumbnail-iframe { display: block; position: absolute; top: 0; left: 0; width: 390px; height: 800px; border: 0; transform: scale(var(--thumbnail-scale, 0.34871795)); transform-origin: top left; pointer-events: none; }
+  .invitation-thumbnail-link { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; padding: 6px 9px; border-radius: 6px; background: var(--card); color: var(--primary); font-size: 9px; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 5px #0002; }
+  @container (min-width: 600px) {
+    .invitation-secondary-track { min-height: 40px; }
+  }
+  @container (max-width: 599px) {
+    .invitation-secondary-track:empty { display: none; }
+  }
+  @media (max-width: 479px) {
+    .invitation-grid { gap: 20px; }
+    .invitation-tile { display: grid; grid-template-columns: 112px minmax(0, 1fr); }
+    .invitation-tile-render { padding: 16px 6px; align-items: center; border-bottom: 0; border-right: 1px solid var(--border); }
+    .invitation-tile-body { padding: 16px 14px; }
+    .invitation-tile .invitation-thumbnail { --thumbnail-width: 100px; --thumbnail-height: 181px; --thumbnail-scale: 0.22564103; border-radius: 17px; }
+    .invitation-tile .invitation-thumbnail-screen { border-radius: 11px; }
+    .invitation-tile .invitation-thumbnail-link { font-size: 0; padding: 6px; }
+    .invitation-tile-body h3 { font-size: 14px; }
+    .invitation-tile-body > p { font-size: 11px; }
+    .invitation-tile-body button, .invitation-tile-body a { white-space: normal; }
+  }
+
+  /* Section editor — mobile foundations (KJ-1).
+     Everything here is scoped to <=1023px, so the desktop editor is untouched.
+     - 16px inputs kill the iOS focus-zoom.
+     - 44px targets for the Section-stack row controls.
+     - the dashboard Navbar / Footer step aside while the editor is mounted. */
+  @media (max-width: 1023px) {
+    /* `inputStyle()` is inline (`fontSize: 14`), so only `!important` can win
+       without editing the TSX (which would move desktop too). */
+    .section-editor input,
+    .section-editor textarea,
+    .section-editor select { font-size: 16px !important; }
+
+    .section-editor .se-iconbtn,
+    .section-editor .se-handle {
+      min-width: 44px;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+    }
+    .section-editor .se-row { min-height: 56px; }
+
+    body:has(.section-editor) > header,
+    body:has(.section-editor) footer { display: none; }
+  }
+
+  /* Section editor — C + D mobile shell (KJ-1).
+     Scoped to <=1023px and to the .se-mobile root, so the desktop editor is
+     untouched. Sizes follow docs/mobile-editor-lab/index.html. */
+  @media (max-width: 1023px) {
+    .section-editor.se-mobile {
+      position: relative;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Top bar wraps rather than overflowing at 360px. */
+    .section-editor.se-mobile > header {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+    }
+    .section-editor.se-mobile > header > div { min-width: 0; }
+    .section-editor.se-mobile > header > :last-child {
+      flex-basis: 100%;
+      margin-left: 0 !important;
+    }
+
+    /* Bantuan shares the wrapped first row with the title; a tighter variant
+       keeps it from pushing the row past 390px. `!important` because
+       `helpButtonStyle` is inline (same reason as the 16px inputs above). */
+    .section-editor.se-mobile .se-helpbtn {
+      padding: 8px 10px !important;
+      font-size: 12px !important;
+    }
+
+    .se-mobile-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Canvas: the live card fills the body, above the rail. */
+    .se-canvas {
+      position: absolute;
+      inset: 0;
+      padding-bottom: 76px;
+    }
+
+    /* Full-screen Section stack (☰). */
+    .se-stack {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fbf7ef;
+      padding-bottom: 76px;
+    }
+
+    /* Bottom form sheet. */
+    .se-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--kb-inset, 0px) + 76px);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -14px 40px -12px color-mix(in srgb, var(--primary) 34%, transparent);
+      overflow: hidden;
+      transition: height .28s cubic-bezier(.22, .9, .3, 1);
+    }
+    .se-sheet[data-detent="peek"] { height: 26%; }
+    .se-sheet[data-detent="half"] { height: 52%; }
+    .se-sheet[data-detent="full"] { height: 86%; }
+
+    .se-grabber {
+      flex: none;
+      display: grid;
+      place-items: center;
+      padding: 9px 0 3px;
+      cursor: grab;
+      touch-action: none;
+    }
+    .se-grabber-bar {
+      display: block;
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .se-progress {
+      flex: none;
+      display: flex;
+      gap: 3px;
+      padding: 7px 14px 9px;
+    }
+    .se-progress i {
+      flex: 1;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+    .se-progress i.done { background: #27ae60; }
+    .se-progress i.now { background: var(--accent); }
+
+    .se-sheethead {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 2px 14px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .se-sheethead b {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      color: var(--primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .se-count {
+      flex: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted-foreground);
+      white-space: nowrap;
+    }
+
+    .se-detents {
+      flex: none;
+      display: flex;
+      gap: 4px;
+      padding: 3px;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+    }
+    .se-detents button {
+      min-width: 30px;
+      min-height: 28px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--muted-foreground);
+      cursor: pointer;
+    }
+    .se-detents button[aria-pressed="true"] {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .se-sheetbody {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      /* The desktop form gets its gutter from the centre pane's padding.
+         The sheet has no such pane, so the gutter lives here. */
+      padding: 16px 14px 28px;
+    }
+
+    /* Hubungi packs three text fields into one row. At sheet width each
+       column is too narrow to show a full phone number or "Pengantin", so
+       the row keeps readable columns and pans sideways. The remove button
+       stays pinned to the right edge. */
+    .section-editor.se-mobile .se-contact-row {
+      grid-template-columns: 150px 190px 210px auto !important;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      padding-bottom: 4px;
+    }
+    .section-editor.se-mobile .se-contact-row > :not(:last-child) {
+      scroll-snap-align: start;
+    }
+    .section-editor.se-mobile .se-contact-row > :last-child {
+      position: sticky;
+      right: 0;
+      background: #fff;
+      box-shadow: -10px 0 10px -7px rgb(0 0 0 / 0.16);
+    }
+
+    /* Navigation rail, pinned above the keyboard. */
+    .se-rail {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--kb-inset, 0px) + env(safe-area-inset-bottom, 0px));
+      z-index: 35;
+      display: flex;
+      gap: 6px;
+      height: 76px;
+      padding: 9px 12px 14px;
+      box-sizing: border-box;
+      background: color-mix(in srgb, #fff 94%, transparent);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+    }
+    .se-rail-btn {
+      flex: 1;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted-foreground);
+      cursor: pointer;
+    }
+    .se-rail-btn:disabled { opacity: .38; cursor: not-allowed; }
+    .se-rail-btn.se-listbtn { flex: 0 0 56px; font-size: 18px; }
+    .se-rail-btn.se-go {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .se-rail-btn.se-go.se-final {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Mobile tour: the reorder hint arrow. It floats above the highlighted
+       row, centred on the drag handle, and bobs down toward and up away from
+       it because the drag it describes is vertical. Gold, decorative, above
+       the dim overlay and ring. Scoped here so nothing leaks to desktop. */
+    .se-tour-arrow {
+      color: var(--accent);
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--background) 82%, transparent);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--foreground) 22%, transparent);
+      transform: translate(-50%, -100%);
+      animation: se-tour-arrow-bob 1.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes se-tour-arrow-bob {
+      0%, 100% { transform: translate(-50%, calc(-100% - 5px)); }
+      50% { transform: translate(-50%, calc(-100% + 5px)); }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .se-sheet { transition: none !important; }
+    /* The arrow stays visible; it just stops moving. */
+    .se-tour-arrow { animation: none; }
+  }
+}

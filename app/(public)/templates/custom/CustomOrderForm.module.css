@@ -1,0 +1,29 @@
+/* Form control sizing. The controls keep their decorative inline `inputStyle`;
+   only the viewport-dependent font-size lives here, because an inline style
+   cannot carry a media query. */
+
+.input {
+  font-size: 14px;
+}
+
+/* iOS Safari auto-zooms the page on focus for any control under 16px and does
+   not zoom back. Reach 16px at mobile widths; desktop stays at 14px. */
+@media (max-width: 1023px) {
+  .input {
+    font-size: 16px;
+  }
+}
+
+/* Nama Penuh and Telefon share a row above 640px; a full name and a Malaysian
+   phone number each want the full width on a phone. */
+.contactRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .contactRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
